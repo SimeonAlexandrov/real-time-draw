@@ -3,6 +3,10 @@ import './App.css';
 import CanvasDraw from "react-canvas-draw";
 import { w3cwebsocket as W3CWebSocket } from "websocket"
 
+import Sender from './Sender/Sender'
+import Receiver from './Receiver/Receiver'
+
+
 const websocketClient = new W3CWebSocket("ws://127.0.0.1:8000/ws")
 
 class App extends Component {
@@ -10,32 +14,37 @@ class App extends Component {
     super(props)
 
     this.state = {
-      saveData: { lines: []},
-      canvas: null
+      role: null
     }
   }
 
-  componentDidMount() {
-    websocketClient.onopen = () => {
-      console.log("WebSocket client connected")
-    }
-    window.addEventListener("mouseup", event => {
-      const drawing = this.canvas.getSaveData()
-      websocketClient.send(Buffer(JSON.stringify(drawing)))
+  onButtonClick(e) {
+    this.setState({
+      ...this.state,
+      role: e.target.id
     })
   }
 
-  render() {
-    return (
-      <div className="App">
-        <h1>DrawProject</h1>
+  renderContent() {
+    if (this.state.role === "sender") {
+      return <Sender/>
+    } else if (this.state.role === "receiver") {
+      return <Receiver/>
+    } else {
+      return <React.Fragment>
+        <h1>DrawProject: Welcome</h1>
         <br/>
-        <CanvasDraw
-          ref={canvas => this.canvas = canvas}
-          saveData={JSON.stringify(this.state.saveData)}
-        />
-      </div>
-    );
+        <p>I would like to be a:</p>
+        <button id="sender" onClick={this.onButtonClick.bind(this)}>Sender</button>
+        <button id="receiver" onClick={this.onButtonClick.bind(this)}>Receiver</button>
+      </React.Fragment>
+    }
+  }
+
+  render() {
+    return <div className="App">
+      {this.renderContent()}
+    </div>
   }
 }
 
