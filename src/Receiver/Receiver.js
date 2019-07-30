@@ -8,7 +8,7 @@ class Receiver extends Component {
     super(props)
     
     this.state = {
-      saveData: { lines: []},
+      saveData: JSON.stringify({ lines: []}),
       canvas: null
     }
   }
@@ -17,6 +17,16 @@ class Receiver extends Component {
     const websocketClient = new W3CWebSocket("ws://127.0.0.1:8000/ws")
     websocketClient.onopen = () => {
       console.log("Receiver WebSocket client connected")
+      websocketClient.send(Buffer.from("receiver"))
+    }
+    websocketClient.onmessage = message => {
+      console.log("Received message from websocket connection", message)
+      if (message.data) {
+        this.setState({
+          ...this.state,
+          saveData: JSON.parse(message.data)
+        })
+      }
     }
     window.addEventListener("mouseup", event => {
       const drawing = this.canvas.getSaveData()
@@ -31,7 +41,7 @@ class Receiver extends Component {
         <br/>
         <CanvasDraw
           ref={canvas => this.canvas = canvas}
-          saveData={JSON.stringify(this.state.saveData)}
+          saveData={this.state.saveData}
         />
       </React.Fragment>
     );

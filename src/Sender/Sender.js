@@ -17,6 +17,7 @@ class Sender extends Component {
     const websocketClient = new W3CWebSocket("ws://127.0.0.1:8000/ws")
     websocketClient.onopen = () => {
       console.log("Sender WebSocket client connected")
+      websocketClient.send(Buffer.from("sender"))
     }
     window.addEventListener("mouseup", event => {
       const drawing = this.canvas.getSaveData()

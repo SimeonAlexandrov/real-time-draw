@@ -1,13 +1,8 @@
 import React, { Component } from 'react';
-import './App.css';
-import CanvasDraw from "react-canvas-draw";
-import { w3cwebsocket as W3CWebSocket } from "websocket"
+import './App.css'  
 
 import Sender from './Sender/Sender'
 import Receiver from './Receiver/Receiver'
-
-
-const websocketClient = new W3CWebSocket("ws://127.0.0.1:8000/ws")
 
 class App extends Component {
   constructor(props) {
