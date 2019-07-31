@@ -39,6 +39,11 @@ func serveWebsocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Println("Client connected: ", conn.RemoteAddr())
+
+	// NOTE
+	// Pass connection to a goroutine
+	// Add user to list of clients
+
 	// Read message from browser
 	for {
 		_, msg, err := conn.ReadMessage()
