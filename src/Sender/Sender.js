@@ -19,6 +19,12 @@ class Sender extends Component {
       console.log("Sender WebSocket client connected")
       websocketClient.send(Buffer.from("sender"))
     }
+
+    websocketClient.onmessage = (message) => {
+      console.log("Received message from server")
+      console.log(message)
+    }
+
     window.addEventListener("mouseup", event => {
       const drawing = this.canvas.getSaveData()
       // console.log(JSON.stringify(drawing))
