@@ -55,12 +55,6 @@ func manageState(writes chan Message) {
 				fmt.Println("State error: unrecognized write cause: ", write.cause)
 				return
 			}
-			// response := Message{
-			// 	origin:  cl.uuid,
-			// 	cause:   "response",
-			// 	payload: []byte("OK madafacka"),
-			// }
-			// outgoingCh <- response
 		}
 
 	}

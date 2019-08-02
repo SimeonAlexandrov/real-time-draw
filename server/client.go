@@ -53,6 +53,7 @@ func (c Client) handleIncoming() {
 		// 	cause:   "draw",
 		// 	payload: wsm,
 		// }
+
 		// Put message in stateModifier channel
 		c.incoming <- msg
 	}
