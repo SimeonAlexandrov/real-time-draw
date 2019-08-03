@@ -3,6 +3,8 @@ import CanvasDraw from "react-canvas-draw";
 import { w3cwebsocket as W3CWebSocket } from "websocket"
 import PropTypes from "prop-types"
 
+import MSG_TYPES from "../_constants"
+
 class Receiver extends Component {
   constructor(props) {
     super(props)
@@ -13,18 +15,23 @@ class Receiver extends Component {
     }
   }
   
+  prepareMessage = (objectMessage) => Buffer.from(JSON.stringify(objectMessage)) 
+
   componentDidMount() {
     const websocketClient = new W3CWebSocket(`ws://127.0.0.1:8000/ws?id=${this.props.clientId}`)
     websocketClient.onopen = () => {
-      console.log("Receiver WebSocket client connected")
-      websocketClient.send(Buffer.from("receiver"))
+      const initMessage = { 
+        id: this.props.clientId,
+        cause: MSG_TYPES.INIT 
+      }
+      websocketClient.send(this.prepareMessage(initMessage))
     }
     websocketClient.onmessage = message => {
-      console.log("Received message from websocket connection", message)
+      console.log("Received message from websocket connection", message.data)
       if (message.data) {
         this.setState({
           ...this.state,
-          saveData: JSON.parse(message.data)
+          saveData: message.data
         })
       }
     }
