@@ -1,23 +1,26 @@
 import React, { Component } from 'react';
 import CanvasDraw from "react-canvas-draw";
 import { w3cwebsocket as W3CWebSocket } from "websocket"
-
+import PropTypes from 'prop-types'
 
 class Sender extends Component {
   constructor(props) {
     super(props)
     
     this.state = {
-      saveData: { lines: []},
+      saveData: JSON.stringify({ lines: []}),
       canvas: null
     }
   }
   
+  prepareMessage = (objectMessage) => Buffer.from(JSON.stringify(objectMessage)) 
+
   componentDidMount() {
     const websocketClient = new W3CWebSocket("ws://127.0.0.1:8000/ws")
     websocketClient.onopen = () => {
       console.log("Sender WebSocket client connected")
-      websocketClient.send(Buffer.from("sender"))
+      const initMessage = { id: this.props.clientId }
+      websocketClient.send(this.prepareMessage(initMessage))
     }
 
     websocketClient.onmessage = (message) => {
@@ -27,8 +30,11 @@ class Sender extends Component {
 
     window.addEventListener("mouseup", event => {
       const drawing = this.canvas.getSaveData()
-      // console.log(JSON.stringify(drawing))
-      websocketClient.send(Buffer.from(JSON.stringify(drawing)))
+      const drawMessage = {
+        id: this.props.clientId,
+        drawing
+      }
+      websocketClient.send(this.prepareMessage(drawMessage))
     })
   }
 
@@ -36,14 +42,23 @@ class Sender extends Component {
     return (
       <React.Fragment>
         <h1>DrawProject: Sender</h1>
+        <h2>Hi, {this.props.clientId}. Try to draw *placeholder*</h2>
         <br/>
-        <CanvasDraw
-          ref={canvas => this.canvas = canvas}
-          saveData={JSON.stringify(this.state.saveData)}
-        />
+        <div style={{width:"100%"}}>
+          <div style={{ display: "table",margin: "0 auto", border: "1px solid black"}}>
+            <CanvasDraw
+              ref={canvas => this.canvas = canvas}
+              saveData={this.state.saveData}
+            />
+          </div>
+        </div>
       </React.Fragment>
     );
   }
+}
+
+Sender.propTypes = {
+  clientId: PropTypes.string.isRequired
 }
 
 export default Sender;

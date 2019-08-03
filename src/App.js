@@ -9,29 +9,70 @@ class App extends Component {
     super(props)
 
     this.state = {
-      role: null
+      role: null,
+      id: "",
+      ready: false
     }
   }
 
-  onButtonClick(e) {
+  onOptionChange(e) {
     this.setState({
       ...this.state,
       role: e.target.id
     })
   }
 
+  onIdChange(e) {
+    this.setState({
+      ...this.state,
+      id: e.target.value 
+    })
+  }
+
+  onSubmit(e) {
+    this.setState({
+      ...this.state,
+      ready: true
+    })
+  }
+
   renderContent() {
-    if (this.state.role === "sender") {
-      return <Sender/>
-    } else if (this.state.role === "receiver") {
-      return <Receiver/>
+    const state = this.state
+    if (state.ready && state.role === "sender") {
+      return <Sender clientId={state.id}/>
+    } else if (state.ready && state.role === "receiver") {
+      return <Receiver clientId={state.id}/>
     } else {
       return <React.Fragment>
         <h1>DrawProject: Welcome</h1>
         <br/>
-        <p>I would like to be a:</p>
-        <button id="sender" onClick={this.onButtonClick.bind(this)}>Sender</button>
-        <button id="receiver" onClick={this.onButtonClick.bind(this)}>Receiver</button>
+        <p>Join as: </p>
+        <form onSubmit={this.onSubmit.bind(this)}>
+          <input 
+            type="text" 
+            value={state.id} 
+            onChange={this.onIdChange.bind(this)}
+          />
+          <label>
+            <input 
+              type="radio" 
+              id="sender" 
+              checked={state.role === "sender"}
+              onChange={this.onOptionChange.bind(this)} 
+            />
+            Sender
+          </label>
+          <label>
+            <input 
+              type="radio" 
+              id="receiver" 
+              checked={state.role === "receiver"}
+              onChange={this.onOptionChange.bind(this)}
+            />
+            Receiver
+          </label>
+          <button id="sender" type="submit" >Join</button>
+        </form>
       </React.Fragment>
     }
   }
