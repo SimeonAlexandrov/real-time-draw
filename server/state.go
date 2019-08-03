@@ -35,31 +35,41 @@ func manageState(writes chan Message) {
 			fmt.Println("Received message in state routine: ")
 			fmt.Println(write)
 
-			// For each write from user X,
-			// a broadcast to all other users must be performed
 			if write.cause == "init" {
 				// Add Client to clients
 				fmt.Println("Received init request")
 				s.clients[write.origin.uuid] = write.origin
-				fmt.Println("Updated state:")
-				fmt.Println(s)
-			} else if write.cause == "drawing" {
-				// Update drawing in state
-				// and broadcast its value to other clients
+			} else if write.cause == "draw" {
+				fmt.Println("Received draw request")
+				s.drawing = write.payload
+				s.broadcast(write.origin)
 			} else if write.cause == "exit" {
-				// Remove client from clients
+				// Remove client from clients list
 				fmt.Println("Removing user from state: ", write.origin.uuid)
 				delete(s.clients, write.origin.uuid)
-				fmt.Println(s)
 			} else {
 				fmt.Println("State error: unrecognized write cause: ", write.cause)
 				return
 			}
+
+			fmt.Println("Updated state: ")
+			fmt.Println(s)
 		}
 
+		// TODO broadcast all kinds of events
+		// such as client joined/exited
 	}
 }
 
-func (s State) broadcast() {
-	// TODO
+func (s State) broadcast(origin *Client) {
+	fmt.Println("Broadcasting new state to clients")
+	for _, client := range s.clients {
+		if client.uuid != origin.uuid {
+			client.outgoing <- Message{
+				origin:  origin,
+				cause:   "broadcast",
+				payload: s.drawing,
+			}
+		}
+	}
 }
