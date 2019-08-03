@@ -14,7 +14,7 @@ class Receiver extends Component {
   }
   
   componentDidMount() {
-    const websocketClient = new W3CWebSocket("ws://127.0.0.1:8000/ws")
+    const websocketClient = new W3CWebSocket(`ws://127.0.0.1:8000/ws?id=${this.props.clientId}`)
     websocketClient.onopen = () => {
       console.log("Receiver WebSocket client connected")
       websocketClient.send(Buffer.from("receiver"))

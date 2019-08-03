@@ -16,7 +16,7 @@ class Sender extends Component {
   prepareMessage = (objectMessage) => Buffer.from(JSON.stringify(objectMessage)) 
 
   componentDidMount() {
-    const websocketClient = new W3CWebSocket("ws://127.0.0.1:8000/ws")
+    const websocketClient = new W3CWebSocket(`ws://127.0.0.1:8000/ws?id=${this.props.clientId}`)
     websocketClient.onopen = () => {
       console.log("Sender WebSocket client connected")
       const initMessage = { id: this.props.clientId }

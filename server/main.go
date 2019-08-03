@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/google/uuid"
+
 	"github.com/gorilla/websocket"
 )
 
@@ -38,15 +40,23 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 
 func serveWebsocket(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
-	// defer conn.Close()
 	if err != nil {
 		fmt.Println("Failed to upgrade to websocket protocol", err)
 		return
 	}
-	fmt.Println("Client connected: ", conn.RemoteAddr())
+
+	id, err := extractMetadataFromRequest(r)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println("Client connected: ", id)
+
+	// Create channel for the messages targeted at this clientsp
 	outgoingCh := make(chan Message)
+
 	cl := Client{
-		uuid:     conn.RemoteAddr().String(),
+		uuid:     id,
 		role:     "sender", // TODO determine
 		incoming: stateModifier,
 		outgoing: outgoingCh,
@@ -55,4 +65,20 @@ func serveWebsocket(w http.ResponseWriter, r *http.Request) {
 	go cl.handleIncoming()
 	go cl.handleOutgoing()
 
+}
+
+func extractMetadataFromRequest(r *http.Request) (string, error) {
+	params, ok := r.URL.Query()["id"]
+	if !ok {
+		return "", fmt.Errorf("Error while parsing clientId")
+	}
+
+	id := params[0]
+
+	u, err := uuid.NewRandom()
+	if err != nil {
+		fmt.Println("Error while generating uuid fro client: ", id)
+	}
+
+	return id + "-" + u.String()[:4], nil
 }
