@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/gorilla/websocket"
@@ -24,36 +25,34 @@ func (c Client) handleIncoming() {
 		exitMsg := Message{
 			origin:  &c,
 			cause:   "exit",
-			payload: []byte{},
+			payload: "",
 		}
 
 		c.incoming <- exitMsg
 		c.conn.Close()
 	}()
+
 	fmt.Println("Reader routine started")
 	for {
 		_, wsm, err := c.conn.ReadMessage()
-
+		fmt.Println("Received message in reader goroutine: ")
 		if err != nil {
 			fmt.Println("Ending websocket communication with: ", c.uuid)
 			return
 		}
-		fmt.Println("Received message in reader goroutine", wsm)
 
-		// Init message
-		msg := Message{
-			origin:  &c,
-			cause:   "init",
-			payload: []byte{},
+		var messageData map[string]string
+		jsonErr := json.Unmarshal(wsm, &messageData)
+		if jsonErr != nil {
+			fmt.Println("Error occured during JSON unmarshal", err)
+			return
 		}
 
-		// Draw message
-		// msg := Message{
-		// 	origin:  &c,
-		// 	cause:   "draw",
-		// 	payload: wsm,
-		// }
-
+		msg := Message{
+			origin:  &c,
+			cause:   messageData["cause"],
+			payload: messageData["payload"],
+		}
 		// Put message in stateModifier channel
 		c.incoming <- msg
 	}
@@ -68,7 +67,7 @@ func (c Client) handleOutgoing() {
 		fmt.Println("Sending message to client with id:", c.uuid)
 		fmt.Println("Message: ")
 		fmt.Println(m)
-		err := c.conn.WriteMessage(websocket.TextMessage, m.payload)
+		err := c.conn.WriteMessage(websocket.TextMessage, []byte(m.payload))
 		if err != nil {
 			fmt.Printf("Ending communication with %v because of:", c.uuid)
 			fmt.Println(err)
