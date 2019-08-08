@@ -1,9 +1,11 @@
 import React, { Component } from 'react';
-import './App.css'  
+import { BrowserRouter as Router, Route } from "react-router-dom"
 
+import './App.css'  
 import Sender from './Sender/Sender'
 import Receiver from './Receiver/Receiver'
-
+import Landing from './Landing/Landing'
+import Lobby from './Lobby/Lobby'
 class App extends Component {
   constructor(props) {
     super(props)
@@ -78,9 +80,16 @@ class App extends Component {
   }
 
   render() {
-    return <div className="App">
-      {this.renderContent()}
-    </div>
+    // return <div className="App">
+    //   {this.renderContent()}
+    // </div>
+
+    return (
+      <Router>
+        <Route exact path="/" component={Landing} />
+        <Route path="/lobby" component={Lobby} />
+    </Router>
+    )
   }
 }
 
