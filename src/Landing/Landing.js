@@ -1,10 +1,7 @@
 import React, { Component } from 'react';
 import { Link } from "react-router-dom"
-import PropTypes from "prop-types"
 
-import MSG_TYPES from "../_constants"
 import { Form, Icon, Input, Button } from "antd"
-
 
 import Page from "../_components/Page"
 
@@ -25,6 +22,7 @@ class Landing extends Component {
             cannotSubmit: false
         })
     }
+
 
     render() {
         return (

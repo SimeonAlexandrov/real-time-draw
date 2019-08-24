@@ -1,11 +1,13 @@
 import React, { Component } from 'react';
 import PropTypes from "prop-types"
 
+
+import { w3cwebsocket as W3CWebSocket } from "websocket"
 import MSG_TYPES from "../_constants"
-import { Form, Icon, Input, Button, Row, Col, Divider, Statistic, Tag, Table } from "antd"
+import { Form, Icon, Button, Row, Col, Divider, Statistic, Tag, Table } from "antd"
 
 import Page from "../_components/Page"
-
+const { Column } = Table
 const games = [
     {
         key: 1,
@@ -23,38 +25,6 @@ const games = [
     }
 ]
 
-const gamesColumns = [
-  {
-    title: 'Id',
-    dataIndex: 'id',
-    key: 'id'
-  },
-  {
-    title: 'Players Joined',
-    dataIndex: 'playersJoined',
-    key: 'playersJoined',
-    render: playersJoined => (
-        <Statistic value={playersJoined} />
-    )
-  },
-  {
-    title: 'Status',
-    key: 'status',
-    dataIndex: 'status',
-    render: status => (
-            <Tag color={status === "pending" ? "green" : "orange"} key={status}>
-              {status.toUpperCase()}
-            </Tag>
-          )
-  },
-  {
-    title: () => (<Button> Create new</Button> ),
-    key: 'action',
-    dataIndex: 'canJoin',
-    render: canJoin => canJoin ? <Button> Join </Button> : null
-  },
-
-]
 
 const userColumns = [
     {
@@ -123,22 +93,79 @@ const users = [
 class Lobby extends Component {
     constructor(props) {
         super(props)
-        this.state = {}
+        this.state = {
+            websocketClient: null
+        }
     }
 
+    prepareMessage = (objectMessage) => Buffer.from(JSON.stringify(objectMessage)) 
+
     componentDidMount() {
-        console.log("Opening web socket connection for user, ", this.props.location.userProps ? this.props.location.userProps.userId : "")
+        if (this.props.location.userProps) {
+            const websocketClient = new W3CWebSocket(`ws://127.0.0.1:8000/ws?id=${this.props.location.userProps.userId}`)
+            websocketClient.onopen = () => {
+                console.log("Landing WebSocket client connected")
+                // websocketClient.send(this.prepareMessage(initMessage))
+            }
+            this.setState({websocketClient})
+
+        } else {
+            console.log("Not connected yet")
+        }
+    
     }
+
+    onCreateNew(e) {
+        const createNewGameMessage = {
+            id: this.props.location.userProps.userId,
+            cause: MSG_TYPES.CREATE_NEW_GAME,
+            payload: "new-game-1234" // TODO add actual game info
+        }
+        this.state.websocketClient.send(this.prepareMessage(createNewGameMessage))
+    }
+
     render() {
         return (
             <Page title="Lobby">
                <Row gutter={16}>
                     <Col span={12}>
                         <Table 
-                            columns={gamesColumns} 
                             dataSource={games}
                             title={() => "Games"} 
-                        />
+                            
+                        >
+                            <Column 
+                                title="Id"
+                                dataIndex="id"
+                                key="id"
+                            />
+                            <Column
+                                title="Players joined"
+                                dataIndex="playersJoined"
+                                key="playersJoined"
+                                render={
+                                    playersJoined => <Statistic value={playersJoined} />
+                                }
+                            />
+                            <Column
+                                title="Status"
+                                dataIndex="status"
+                                key="status"
+                                render={ 
+                                    status => (
+                                        <Tag color={status === "pending" ? "green" : "orange"} key={status}>
+                                          {status.toUpperCase()}
+                                        </Tag>
+                                      )
+                                }
+                            />
+                            <Column
+                                title={() => <Button onClick={this.onCreateNew.bind(this)}> Create new</Button>}
+                                key="action"
+                                dataIndex="canJoin"
+                                render={canJoin => canJoin ? <Button> Join </Button> : null}
+                            />
+                        </Table>
                     </Col>
                     <Col span={12}>
                         <Table 
