@@ -45,7 +45,7 @@ func serveWebsocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := extractMetadataFromRequest(r)
+	id, err := createUUID(r)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -67,7 +67,7 @@ func serveWebsocket(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func extractMetadataFromRequest(r *http.Request) (string, error) {
+func createUUID(r *http.Request) (string, error) {
 	params, ok := r.URL.Query()["id"]
 	if !ok {
 		return "", fmt.Errorf("Error while parsing clientId")

@@ -6,23 +6,14 @@ import "fmt"
 type State struct {
 	drawing string
 	clients map[string]*Client
-}
-
-type readOp struct {
-	key   int
-	cause string
-	resp  chan Message
-}
-type writeOp struct {
-	key  int
-	val  int
-	resp chan bool
+	games   map[string]*Game
 }
 
 func manageState(writes chan Message) {
 	s := State{
 		drawing: "",
 		clients: make(map[string]*Client),
+		games:   make(map[string]*Game),
 	}
 	fmt.Println("State manager routine has started.")
 	fmt.Println(s)
@@ -42,7 +33,8 @@ func manageState(writes chan Message) {
 			} else if write.cause == "draw" {
 				fmt.Println("Received draw request")
 				s.drawing = write.payload
-				s.broadcast(write.origin)
+			} else if write.cause == "createNew" {
+				fmt.Println("Create new game event received")
 			} else if write.cause == "exit" {
 				// Remove client from clients list
 				fmt.Println("Removing user from state: ", write.origin.uuid)
@@ -54,6 +46,8 @@ func manageState(writes chan Message) {
 
 			fmt.Println("Updated state: ")
 			fmt.Println(s)
+
+			s.broadcast(write.origin)
 		}
 
 		// TODO broadcast all kinds of events
@@ -61,6 +55,7 @@ func manageState(writes chan Message) {
 	}
 }
 
+// TODO broadcast to a target group
 func (s State) broadcast(origin *Client) {
 	fmt.Println("Broadcasting new state to clients")
 	for _, client := range s.clients {
