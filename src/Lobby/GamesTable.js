@@ -28,9 +28,10 @@ class GamesTable extends Component {
         this.props.onCreateNew(this.state.gameId)
     }
 
-    handleVisibleChange = visible => {
+    onVisibleChange = visible => {
         this.setState({ ...this.state, isPopoverVisible: true })
     }
+
 
     renderCreateNewButton() {
         return (
@@ -49,11 +50,16 @@ class GamesTable extends Component {
             title="Enter a game id"
             trigger="click"
             visible={this.state.isPopoverVisible}
-            onVisibleChange={this.handleVisibleChange}
+            onVisibleChange={this.onVisibleChange}
           >
             <Button>Create New</Button>
           </Popover>
         )
+    }
+
+    renderJoinButton(cellValue, record) {
+        console.log(record)
+        return  cellValue ? <Button onClick={() => this.props.onJoinClick(record.id)}> Join </Button> : null
     }
 
     render() {
@@ -92,7 +98,7 @@ class GamesTable extends Component {
                     title={this.renderCreateNewButton.bind(this)}
                     key="action"
                     dataIndex="canJoin"
-                    render={canJoin => canJoin ? <Button> Join </Button> : null}
+                    render={this.renderJoinButton.bind(this)}
                 />
             </Table>
         )

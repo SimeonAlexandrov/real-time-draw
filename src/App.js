@@ -5,7 +5,7 @@ import './App.css'
 import Sender from './Sender/Sender'
 import Receiver from './Receiver/Receiver'
 import Landing from './Landing/Landing'
-import Lobby from './Lobby/Lobby'
+import { Lobby } from './Lobby/Lobby'
 class App extends Component {
   constructor(props) {
     super(props)

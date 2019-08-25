@@ -90,6 +90,8 @@ func (s State) handleStateWriteOp(write Message, sModifier chan Message) {
 		s.handleCreateNewGame(write, sModifier)
 	case "startGame":
 		s.handleStartGame(write)
+	case "joinGame":
+		s.handleJoinGame(write)
 	case "exit":
 		delete(s.Clients, write.origin.getID())
 	default:
@@ -120,7 +122,23 @@ func (s State) handleCreateNewGame(write Message, sModifier chan Message) {
 		}
 		s.Games[gameID] = &game
 		s.Clients[write.origin.getID()].Status = "waiting"
+		s.Clients[write.origin.getID()].JoinedGame = gameID
 		go game.wait()
+	} else {
+		fmt.Printf("createNewGame message is not sent by user!\n")
+	}
+}
+
+func (s State) handleJoinGame(write Message) {
+	if cl, ok := write.origin.(*Client); ok {
+		originID := cl.getID()
+		gameID := write.payload
+		fmt.Printf("User %v requests to join %v \n", originID, gameID)
+		s.Clients[originID].Status = "waiting"
+		s.Clients[originID].JoinedGame = gameID
+
+		updatedPlayers := append(s.Games[gameID].Players, cl)
+		s.Games[gameID].Players = updatedPlayers
 	} else {
 		fmt.Printf("createNewGame message is not sent by user!\n")
 	}

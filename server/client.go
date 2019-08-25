@@ -10,11 +10,12 @@ import (
 // Client - instances of this type handle WebSocket connections
 // and read/mutate the application state
 type Client struct {
-	UUID     string
-	Status   string
-	incoming chan Message
-	outgoing chan Message
-	conn     *websocket.Conn
+	UUID       string
+	Status     string
+	JoinedGame string
+	incoming   chan Message
+	outgoing   chan Message
+	conn       *websocket.Conn
 }
 
 // Implements Origin

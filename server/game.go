@@ -30,6 +30,7 @@ func (g Game) wait() {
 	const waitSeconds = 30
 	const requiredPlayers = 2
 	for {
+		// TODO research how select with timeout works
 		fmt.Printf("Game will %v wait for %vs\n", g.ID, waitSeconds)
 		time.Sleep(waitSeconds * time.Second)
 		if len(g.Players) >= requiredPlayers {
