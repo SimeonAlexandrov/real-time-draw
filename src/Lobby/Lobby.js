@@ -33,7 +33,8 @@ class Lobby extends Component {
         super(props)
         this.state = {
             websocketClient: null,
-            users: []
+            users: [],
+            games: []
         }
     }
 
@@ -56,11 +57,21 @@ class Lobby extends Component {
         this.setState({
             ...this.state,
             users: newState.clients.map(cl => {
-                const userData = JSON.parse(cl)
+                const { UUID, Status} = JSON.parse(cl)
                 return {
-                    key: userData.UUID,
-                    userId: userData.UUID.split("-")[0],
-                    status: userData.Status
+                    key: UUID,
+                    userId: UUID.split("-")[0],
+                    status: Status
+                }
+            }),
+            games: newState.games.map(g => {
+                const {ID, Status, Players, Creator } = JSON.parse(g)
+                return {
+                    key: ID,
+                    id: ID,
+                    playersJoined: Players.length,
+                    status: Status,
+                    canJoin: Status === "pending" && Creator.split("-")[0] !== this.props.location.userProps.userId
                 }
             })
         })
@@ -95,7 +106,7 @@ class Lobby extends Component {
                <Row gutter={16}>
                     <Col span={12}>
                         <GamesTable
-                            games={games}
+                            games={this.state.games}
                             onCreateNew={this.onCreateNewGame.bind(this)}
                         />
                     </Col>

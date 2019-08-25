@@ -15,52 +15,21 @@ type State struct {
 
 func manageState(writes chan Message) {
 	s := State{
-		Drawing: "",
 		Clients: make(map[string]*Client),
 		Games:   make(map[string]*Game),
 	}
 	fmt.Println("State manager routine has started.")
-	fmt.Println(s)
 	for {
 		select {
-		// case read := <-reads:
-		// 	fmt.Println("Read operation of state with cause: ", read.cause)
 		case write := <-writes:
-			fmt.Println("Write operation of state")
-			fmt.Println("Received message in state routine: ")
-			fmt.Println(write)
-
-			if write.cause == "init" {
-				// Add Client to clients
-				fmt.Println("Received init request")
-				s.Clients[write.origin.UUID] = write.origin
-			} else if write.cause == "draw" {
-				fmt.Println("Received draw request")
-				s.Drawing = write.payload
-			} else if write.cause == "createNew" {
-				fmt.Println("Create new game event received")
-			} else if write.cause == "exit" {
-				// Remove client from clients list
-				fmt.Println("Removing user from state: ", write.origin.UUID)
-				delete(s.Clients, write.origin.UUID)
-			} else {
-				fmt.Println("State error: unrecognized write cause: ", write.cause)
-				return
-			}
-
-			fmt.Println("Updated state: ")
-			fmt.Println(s)
-
-			s.broadcast(write.origin)
+			s.handleStateWriteOp(write, writes)
 		}
 
-		// TODO broadcast all kinds of events
-		// such as client joined/exited
 	}
 }
 
 // TODO broadcast to a target group
-func (s State) broadcast(origin *Client) {
+func (s State) broadcast(origin Origin) {
 	fmt.Println("Broadcasting new state to clients")
 	for _, client := range s.Clients {
 
@@ -78,7 +47,6 @@ func (s State) broadcast(origin *Client) {
 
 func (s State) prepPayload() (string, error) {
 	prepClients := make([]string, 0)
-
 	for _, v := range s.Clients {
 		cl, err := json.Marshal(*v)
 		if err != nil {
@@ -87,10 +55,77 @@ func (s State) prepPayload() (string, error) {
 		prepClients = append(prepClients, string(cl))
 	}
 
+	prepGames := make([]string, 0)
+	for _, v := range s.Games {
+		g, err := json.Marshal(*v)
+		if err != nil {
+			return "", fmt.Errorf("Error while preparing broadcast payload")
+		}
+		prepGames = append(prepGames, string(g))
+	}
+
 	payload := make(map[string][]string)
 	payload["clients"] = prepClients
+	payload["games"] = prepGames
 
 	p, _ := json.Marshal(payload)
 
 	return string(p), nil
+}
+
+func (s State) handleStateWriteOp(write Message, sModifier chan Message) {
+	fmt.Printf("Write operation of state: %+v\n", write)
+
+	switch write.cause {
+	case "init":
+		// Type assertion
+		if cl, ok := write.origin.(*Client); ok {
+			s.Clients[write.origin.getID()] = cl
+		} else {
+			fmt.Printf("Init message is not sent by user!\n")
+		}
+	case "draw":
+		// TODO This property should be part of Game at some point
+	case "createNewGame":
+		s.handleCreateNewGame(write, sModifier)
+	case "startGame":
+		s.handleStartGame(write)
+	case "exit":
+		delete(s.Clients, write.origin.getID())
+	default:
+		fmt.Println("State error: unrecognized write cause: ", write.cause)
+		return
+	}
+
+	fmt.Printf("Updated state: %+v\n", s)
+
+	// Every state change is broadcasted
+
+	s.broadcast(write.origin)
+
+}
+
+func (s State) handleCreateNewGame(write Message, sModifier chan Message) {
+	fmt.Println("Create new game event received")
+	if cl, ok := write.origin.(*Client); ok {
+		players := make([]*Client, 1)
+		players[0] = cl
+		gameID := write.payload
+		game := Game{
+			ID:            gameID,
+			Status:        "pending",
+			Creator:       write.origin.getID(),
+			Players:       players,
+			stateModifier: sModifier,
+		}
+		s.Games[gameID] = &game
+		s.Clients[write.origin.getID()].Status = "waiting"
+		go game.wait()
+	} else {
+		fmt.Printf("createNewGame message is not sent by user!\n")
+	}
+}
+
+func (s State) handleStartGame(write Message) {
+	s.Games[write.origin.getID()].Status = "inProgress"
 }

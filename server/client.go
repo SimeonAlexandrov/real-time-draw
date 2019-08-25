@@ -17,6 +17,11 @@ type Client struct {
 	conn     *websocket.Conn
 }
 
+// Implements Origin
+func (c Client) getID() string {
+	return c.UUID
+}
+
 func (c Client) handleIncoming() {
 	defer func() {
 		// TODO unregister from state
