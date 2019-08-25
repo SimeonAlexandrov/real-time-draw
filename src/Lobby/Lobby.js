@@ -1,10 +1,9 @@
 import React, { Component } from 'react';
-import PropTypes from "prop-types"
 
 
 import { w3cwebsocket as W3CWebSocket } from "websocket"
 import MSG_TYPES from "../_constants"
-import { Form, Icon, Button, Row, Col, Divider, Statistic, Tag, Table } from "antd"
+import { Icon, Button, Row, Col, Statistic, Tag, Table } from "antd"
 
 import Page from "../_components/Page"
 const { Column } = Table
@@ -94,18 +93,40 @@ class Lobby extends Component {
     constructor(props) {
         super(props)
         this.state = {
-            websocketClient: null
+            websocketClient: null,
+            users: []
         }
     }
 
     prepareMessage = (objectMessage) => Buffer.from(JSON.stringify(objectMessage)) 
 
     componentDidMount() {
-        if (this.props.location.userProps) {
-            const websocketClient = new W3CWebSocket(`ws://127.0.0.1:8000/ws?id=${this.props.location.userProps.userId}`)
+        const userProps = this.props.location.userProps
+        if (userProps) {
+            const websocketClient = new W3CWebSocket(`ws://127.0.0.1:8000/ws?id=${userProps.userId}`)
             websocketClient.onopen = () => {
                 console.log("Landing WebSocket client connected")
-                // websocketClient.send(this.prepareMessage(initMessage))
+                const initMessage = { 
+                    id: userProps.userId,
+                    cause: MSG_TYPES.INIT 
+                  }
+                websocketClient.send(this.prepareMessage(initMessage))
+            }
+            websocketClient.onmessage = message => {
+                const newState = JSON.parse(message.data)
+                console.log(newState)
+
+                this.setState({
+                    ...this.state,
+                    users: newState.clients.map(cl => {
+                        const userData = JSON.parse(cl)
+                        return {
+                            key: userData.UUID,
+                            userId: userData.UUID.split("-")[0],
+                            status: userData.Status
+                        }
+                    })
+                })
             }
             this.setState({websocketClient})
 
@@ -170,7 +191,7 @@ class Lobby extends Component {
                     <Col span={12}>
                         <Table 
                             columns={userColumns} 
-                            dataSource={users}
+                            dataSource={this.state.users}
                             title={() => "Users"} 
                         />
                     </Col>

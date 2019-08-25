@@ -56,8 +56,8 @@ func serveWebsocket(w http.ResponseWriter, r *http.Request) {
 	outgoingCh := make(chan Message)
 
 	cl := Client{
-		uuid:     id,
-		role:     "sender", // TODO determine
+		UUID:     id,
+		Status:   "available", // TODO determine
 		incoming: stateModifier,
 		outgoing: outgoingCh,
 		conn:     conn,

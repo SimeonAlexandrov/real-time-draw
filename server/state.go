@@ -1,19 +1,23 @@
 package main
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 // State is managed only by a state manager
+// We export State properties in order to JSON serialize them
 type State struct {
-	drawing string
-	clients map[string]*Client
-	games   map[string]*Game
+	Drawing string
+	Clients map[string]*Client
+	Games   map[string]*Game
 }
 
 func manageState(writes chan Message) {
 	s := State{
-		drawing: "",
-		clients: make(map[string]*Client),
-		games:   make(map[string]*Game),
+		Drawing: "",
+		Clients: make(map[string]*Client),
+		Games:   make(map[string]*Game),
 	}
 	fmt.Println("State manager routine has started.")
 	fmt.Println(s)
@@ -29,16 +33,16 @@ func manageState(writes chan Message) {
 			if write.cause == "init" {
 				// Add Client to clients
 				fmt.Println("Received init request")
-				s.clients[write.origin.uuid] = write.origin
+				s.Clients[write.origin.UUID] = write.origin
 			} else if write.cause == "draw" {
 				fmt.Println("Received draw request")
-				s.drawing = write.payload
+				s.Drawing = write.payload
 			} else if write.cause == "createNew" {
 				fmt.Println("Create new game event received")
 			} else if write.cause == "exit" {
 				// Remove client from clients list
-				fmt.Println("Removing user from state: ", write.origin.uuid)
-				delete(s.clients, write.origin.uuid)
+				fmt.Println("Removing user from state: ", write.origin.UUID)
+				delete(s.Clients, write.origin.UUID)
 			} else {
 				fmt.Println("State error: unrecognized write cause: ", write.cause)
 				return
@@ -58,13 +62,35 @@ func manageState(writes chan Message) {
 // TODO broadcast to a target group
 func (s State) broadcast(origin *Client) {
 	fmt.Println("Broadcasting new state to clients")
-	for _, client := range s.clients {
-		if client.uuid != origin.uuid {
-			client.outgoing <- Message{
-				origin:  origin,
-				cause:   "broadcast",
-				payload: s.drawing,
-			}
+	for _, client := range s.Clients {
+
+		p, err := s.prepPayload()
+		if err != nil {
+			return
+		}
+		client.outgoing <- Message{
+			origin:  origin,
+			cause:   "broadcast",
+			payload: p,
 		}
 	}
+}
+
+func (s State) prepPayload() (string, error) {
+	prepClients := make([]string, 0)
+
+	for _, v := range s.Clients {
+		cl, err := json.Marshal(*v)
+		if err != nil {
+			return "", fmt.Errorf("Error while preparing broadcast payload")
+		}
+		prepClients = append(prepClients, string(cl))
+	}
+
+	payload := make(map[string][]string)
+	payload["clients"] = prepClients
+
+	p, _ := json.Marshal(payload)
+
+	return string(p), nil
 }

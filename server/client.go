@@ -10,8 +10,8 @@ import (
 // Client - instances of this type handle WebSocket connections
 // and read/mutate the application state
 type Client struct {
-	uuid     string
-	role     string
+	UUID     string
+	Status   string
 	incoming chan Message
 	outgoing chan Message
 	conn     *websocket.Conn
@@ -20,7 +20,7 @@ type Client struct {
 func (c Client) handleIncoming() {
 	defer func() {
 		// TODO unregister from state
-		fmt.Println("User leaving:", c.uuid)
+		fmt.Println("User leaving:", c.UUID)
 		// Exit msg
 		exitMsg := Message{
 			origin:  &c,
@@ -37,7 +37,7 @@ func (c Client) handleIncoming() {
 		_, wsm, err := c.conn.ReadMessage()
 		fmt.Println("Received message in reader goroutine: ")
 		if err != nil {
-			fmt.Println("Ending websocket communication with: ", c.uuid)
+			fmt.Println("Ending websocket communication with: ", c.UUID)
 			return
 		}
 
@@ -64,12 +64,12 @@ func (c Client) handleOutgoing() {
 	}()
 	fmt.Println("Writer routine started")
 	for m := range c.outgoing {
-		fmt.Println("Sending message to client with id:", c.uuid)
+		fmt.Println("Sending message to client with id:", c.UUID)
 		fmt.Println("Message: ")
 		fmt.Println(m)
 		err := c.conn.WriteMessage(websocket.TextMessage, []byte(m.payload))
 		if err != nil {
-			fmt.Printf("Ending communication with %v because of:", c.uuid)
+			fmt.Printf("Ending communication with %v because of:", c.UUID)
 			fmt.Println(err)
 		}
 	}
