@@ -88,10 +88,15 @@ func (s State) handleStateWriteOp(write Message, sModifier chan Message) {
 		// TODO This property should be part of Game at some point
 	case "createNewGame":
 		s.handleCreateNewGame(write, sModifier)
-	case "startGame":
-		s.handleStartGame(write)
 	case "joinGame":
 		s.handleJoinGame(write)
+	case "startGame":
+		s.handleStartGame(write)
+	case "newRound":
+		// TODO update game property with round
+	case "makeGuess":
+		// TODO update round with guess
+		// And notify for guesses the others
 	case "exit":
 		delete(s.Clients, write.origin.getID())
 	default:
@@ -145,5 +150,7 @@ func (s State) handleJoinGame(write Message) {
 }
 
 func (s State) handleStartGame(write Message) {
-	s.Games[write.origin.getID()].Status = "inProgress"
+	game := s.Games[write.origin.getID()]
+	game.Status = "inProgress"
+	go game.play()
 }
