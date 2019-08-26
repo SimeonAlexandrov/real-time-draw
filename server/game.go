@@ -26,7 +26,7 @@ func (g Game) getID() string {
 
 // TODO add receiver methods to update game
 // in state and broadcast to players
-func (g Game) wait() {
+func (g *Game) wait() {
 	const waitSeconds = 30
 	const requiredPlayers = 2
 	for {
@@ -36,7 +36,7 @@ func (g Game) wait() {
 		if len(g.Players) >= requiredPlayers {
 			fmt.Printf("Number of players is greater than %v \n", requiredPlayers)
 			stateModifier <- Message{
-				origin:  &g,
+				origin:  g,
 				cause:   "startGame",
 				payload: "adf",
 			}
