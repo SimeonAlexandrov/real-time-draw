@@ -71,8 +71,6 @@ func (c Client) handleOutgoing() {
 	fmt.Println("Writer routine started")
 	for m := range c.outgoing {
 		fmt.Println("Sending message to client with id:", c.UUID)
-		fmt.Println("Message: ")
-		fmt.Println(m)
 		err := c.conn.WriteMessage(websocket.TextMessage, []byte(m.payload))
 		if err != nil {
 			fmt.Printf("Ending communication with %v because of:", c.UUID)
