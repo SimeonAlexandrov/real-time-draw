@@ -11,7 +11,8 @@ class GamesTable extends Component {
         this.state = {
             gameId: "",
             isPopoverVisible: false,
-            isSubmitEnabled: false
+            isSubmitEnabled: false,
+            gamesYouCannotJoin: {}
         }
     }
     
@@ -32,6 +33,11 @@ class GamesTable extends Component {
         this.setState({ ...this.state, isPopoverVisible: true })
     }
 
+    onJoin(record) {
+        console.log(record)
+        this.setState({...this.state, gamesYouCannotJoin: { ...this.state.gamesYouCannotJoin, [record.id]: true}})
+        this.props.onJoinClick(record.id)
+    }
 
     renderCreateNewButton() {
         return (
@@ -58,8 +64,11 @@ class GamesTable extends Component {
     }
 
     renderJoinButton(cellValue, record) {
-        console.log(record)
-        return  cellValue ? <Button onClick={() => this.props.onJoinClick(record.id)}> Join </Button> : null
+        return  cellValue ? 
+            <Button 
+                disabled={this.state.gamesYouCannotJoin[record.id]} 
+                onClick={() => this.onJoin(record)}
+            > Join </Button> : null
     }
 
     render() {
