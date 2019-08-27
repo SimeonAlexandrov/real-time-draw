@@ -43,9 +43,12 @@ func (g Game) getID() string {
 	return g.ID
 }
 
+// Wait - the main function of
+// a shortlived goroutine that is responsible
+// for waiting while enough players join a game
 // NOTE modifing game in this function
 // is not advised due to concurrency issues
-func (g *Game) wait() {
+func (g *Game) Wait() {
 	const waitSeconds = 30
 	const requiredPlayers = 2
 
@@ -65,33 +68,48 @@ func (g *Game) wait() {
 	}
 }
 
-func (g *Game) play() {
+// Play - the main function of a short-lived
+// goroutine that is responsible for changing rounds
+// and ending a game
+func (g *Game) Play() {
 	for i, pl := range g.Players {
-		// TODO do not use hardcoded values
-		const targetLabel = "dog"
-		labelOptions := []string{"cat", "dog", "mouse", "horse"}
-		r := Round{
-			ID:           i + 1,
-			Drawer:       pl.UUID,
-			LabelOptions: labelOptions,
-			TargetLabel:  targetLabel,
-		}
+		g.playRound(i, pl.UUID)
+	}
+	g.end()
+}
 
-		msgPayload, err := json.Marshal(r)
-		if err != nil {
-			panic(err)
-		}
-
-		fmt.Printf("Round: %+v\n", r)
-		// TODO add message for new round
-		stateModifier <- Message{
-			origin:  g,
-			cause:   "newRound",
-			payload: string(msgPayload),
-		}
-		time.Sleep(30 * time.Second)
+func (g Game) playRound(n int, uuid string) {
+	// TODO do not use hardcoded values
+	const targetLabel = "dog"
+	labelOptions := []string{"cat", "dog", "mouse", "horse"}
+	r := Round{
+		ID:           n + 1,
+		Drawer:       uuid,
+		LabelOptions: labelOptions,
+		TargetLabel:  targetLabel,
 	}
 
-	// TODO send endGame message
+	msgPayload, err := json.Marshal(r)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("Round: %+v\n", r)
+	// TODO add message for new round
+	stateModifier <- Message{
+		origin:  g,
+		cause:   "newRound",
+		payload: string(msgPayload),
+	}
+	time.Sleep(10 * time.Second)
+}
+
+func (g Game) end() {
 	fmt.Println("Game ended!")
+	// Think about how to determine a winner
+	stateModifier <- Message{
+		origin:  g,
+		cause:   "endGame",
+		payload: "",
+	}
 }

@@ -31,11 +31,19 @@ class Lobby extends Component {
     }
 
     prepareMessage = (objectMessage) => Buffer.from(JSON.stringify(objectMessage)) 
-
+    debugMessage = (newState) => {
+        console.log("Message received!")
+        console.log("Current user: ", this.props.location.userProps.userId)
+        const clients = newState.clients.map(cl => JSON.parse(cl))
+        console.log("Clients: ",clients)
+        const games = newState.games.map(g => JSON.parse(g))
+        console.log("Games: ", games)
+    }
     onReceiveMessage (message) {
         const newState = JSON.parse(message.data)
-        console.log("Message received!")
-        console.log(message)
+        
+        this.debugMessage()
+
         this.setState({
             ...this.state,
             users: newState.clients.map(cl => {

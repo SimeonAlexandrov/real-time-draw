@@ -112,6 +112,8 @@ func (s State) handleStateWriteOp(write Message, sModifier chan Message) {
 	case "makeGuess":
 		// TODO update round with guess
 		// And notify for guesses the others
+	case "endGame":
+		s.handleEndGame(write)
 	case "exit":
 		delete(s.Clients, write.origin.getID())
 	default:
@@ -146,7 +148,7 @@ func (s State) handleCreateNewGame(write Message, sModifier chan Message) {
 		s.Clients[write.origin.getID()].Status = "waiting"
 		s.Clients[write.origin.getID()].JoinedGame = gameID
 
-		go game.wait()
+		go game.Wait()
 	} else {
 		fmt.Printf("createNewGame message is not sent by user!\n")
 	}
@@ -170,7 +172,7 @@ func (s State) handleJoinGame(write Message) {
 func (s State) handleStartGame(write Message) {
 	game := s.Games[write.origin.getID()]
 	game.Status = "inProgress"
-	go game.play()
+	go game.Play()
 }
 
 func (s State) handleNewRound(write Message) {
@@ -191,4 +193,14 @@ func (s State) handleNewRound(write Message) {
 			pl.Status = "guessing"
 		}
 	}
+}
+
+func (s State) handleEndGame(write Message) {
+	gameID := write.origin.getID()
+	game := s.Games[gameID]
+	for _, pl := range game.Players {
+		pl.Status = "available"
+		pl.JoinedGame = ""
+	}
+	delete(s.Games, gameID)
 }
