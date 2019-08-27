@@ -31,6 +31,7 @@ class Lobby extends Component {
     }
 
     prepareMessage = (objectMessage) => Buffer.from(JSON.stringify(objectMessage)) 
+    
     debugMessage = (newState) => {
         console.log("Message received!")
         console.log("Current user: ", this.props.location.userProps.userId)
@@ -39,11 +40,34 @@ class Lobby extends Component {
         const games = newState.games.map(g => JSON.parse(g))
         console.log("Games: ", games)
     }
+
+    checkIfGameHasStartedForCurrentUser = (userInfo) => {
+        console.warn("Checking...")
+        if (userInfo ) {
+            const joinedGame = userInfo.game
+            const filteredGames = this.state.games
+                .filter(g => g.id === joinedGame)
+            if (filteredGames.length === 0) {
+                console.log("No game joined")
+            } else if(filteredGames.length > 1) {
+                console.log("Oops")
+            } else {
+                if (filteredGames[0].status === "inProgress") {
+                    if (userInfo.status === "drawing") {
+                        console.warn("Redirecting to DRAWING")
+                    } else if (userInfo.status === "guessing") {
+                        console.warn("Redirecting to GUESSING")
+                    }
+                }
+            }
+        }
+    }
+    
     onReceiveMessage (message) {
         const newState = JSON.parse(message.data)
         
-        this.debugMessage()
-
+        this.debugMessage(newState)
+        let thisUserInfo 
         this.setState({
             ...this.state,
             users: newState.clients.map(cl => {
@@ -56,10 +80,7 @@ class Lobby extends Component {
                     game: JoinedGame,
                 }
                 if (userProps.userId === userInfo.userId) {
-                    this.setState({
-                        ...this.state,
-                        userInfo
-                    })
+                    thisUserInfo = userInfo
                 } 
                 return userInfo
             }),
@@ -73,6 +94,17 @@ class Lobby extends Component {
                     canJoin: Status === "pending" && Creator.split("-")[0] !== this.props.location.userProps.userId
                 }
             })
+        }, () => {
+            if (thisUserInfo && !this.state.userInfo) {
+                this.setState({
+                    ...this.state,
+                    userInfo: thisUserInfo
+                }, () => {
+                    this.checkIfGameHasStartedForCurrentUser(this.state.userInfo)
+                })
+            } else if (thisUserInfo) {
+                this.checkIfGameHasStartedForCurrentUser(thisUserInfo)
+            }
         })
     }
 
