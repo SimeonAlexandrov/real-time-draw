@@ -34,8 +34,8 @@ class Lobby extends Component {
 
     onReceiveMessage (message) {
         const newState = JSON.parse(message.data)
-        console.log(newState)
-
+        console.log("Message received!")
+        console.log(message)
         this.setState({
             ...this.state,
             users: newState.clients.map(cl => {
@@ -47,7 +47,6 @@ class Lobby extends Component {
                     status: Status,
                     game: JoinedGame,
                 }
-                console.log(userProps.userId === userInfo.userId)
                 if (userProps.userId === userInfo.userId) {
                     this.setState({
                         ...this.state,
