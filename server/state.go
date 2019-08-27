@@ -29,19 +29,29 @@ func manageState(writes chan Message) {
 }
 
 // TODO broadcast to a target group
-func (s State) broadcast(origin Origin) {
-	fmt.Println("Broadcasting new state to clients")
-	for _, client := range s.Clients {
+func (s State) broadcast(o Origin, audience []*Client) {
+	if audience != nil {
+		fmt.Println("Broadcasting new state to specified audience")
+		for _, c := range audience {
+			s.sendMessage(c, o)
+		}
+	} else {
+		fmt.Println("Broadcasting new state to all clients")
+		for _, c := range s.Clients {
+			s.sendMessage(c, o)
+		}
+	}
+}
 
-		p, err := s.prepPayload()
-		if err != nil {
-			return
-		}
-		client.outgoing <- Message{
-			origin:  origin,
-			cause:   "broadcast",
-			payload: p,
-		}
+func (s State) sendMessage(c *Client, o Origin) {
+	p, err := s.prepPayload()
+	if err != nil {
+		return
+	}
+	c.outgoing <- Message{
+		origin:  o,
+		cause:   "broadcast",
+		payload: p,
 	}
 }
 
@@ -75,7 +85,7 @@ func (s State) prepPayload() (string, error) {
 
 func (s State) handleStateWriteOp(write Message, sModifier chan Message) {
 	fmt.Printf("Write operation of state: %+v\n", write)
-
+	var audience []*Client
 	switch write.cause {
 	case "init":
 		// Type assertion
@@ -84,8 +94,6 @@ func (s State) handleStateWriteOp(write Message, sModifier chan Message) {
 		} else {
 			fmt.Printf("Init message is not sent by user!\n")
 		}
-	case "draw":
-		// TODO This property should be part of Game at some point
 	case "createNewGame":
 		s.handleCreateNewGame(write, sModifier)
 	case "joinGame":
@@ -93,7 +101,14 @@ func (s State) handleStateWriteOp(write Message, sModifier chan Message) {
 	case "startGame":
 		s.handleStartGame(write)
 	case "newRound":
-		// TODO update game property with round
+		// Change audience only to involved players
+		// UPDATE it was not needed here but this concept might be useful elsewhere
+		// if g, ok := write.origin.(*Game); ok {
+		// 	audience = g.Players
+		// }
+		s.handleNewRound(write)
+	case "updateDrawing":
+		// TODO This property should be part of Game at some point
 	case "makeGuess":
 		// TODO update round with guess
 		// And notify for guesses the others
@@ -108,7 +123,7 @@ func (s State) handleStateWriteOp(write Message, sModifier chan Message) {
 
 	// Every state change is broadcasted
 
-	s.broadcast(write.origin)
+	s.broadcast(write.origin, audience)
 
 }
 
@@ -117,6 +132,7 @@ func (s State) handleCreateNewGame(write Message, sModifier chan Message) {
 	if cl, ok := write.origin.(*Client); ok {
 		players := make([]*Client, 1)
 		players[0] = cl
+
 		gameID := write.payload
 		game := Game{
 			ID:            gameID,
@@ -125,9 +141,11 @@ func (s State) handleCreateNewGame(write Message, sModifier chan Message) {
 			Players:       players,
 			stateModifier: sModifier,
 		}
+
 		s.Games[gameID] = &game
 		s.Clients[write.origin.getID()].Status = "waiting"
 		s.Clients[write.origin.getID()].JoinedGame = gameID
+
 		go game.wait()
 	} else {
 		fmt.Printf("createNewGame message is not sent by user!\n")
@@ -153,4 +171,24 @@ func (s State) handleStartGame(write Message) {
 	game := s.Games[write.origin.getID()]
 	game.Status = "inProgress"
 	go game.play()
+}
+
+func (s State) handleNewRound(write Message) {
+	// TODO update game property with round
+	r := Round{}
+	err := json.Unmarshal([]byte(write.payload), &r)
+	if err != nil {
+		panic(err)
+	}
+
+	game := s.Games[write.origin.getID()]
+	game.CurrentRound = r
+
+	for _, pl := range game.Players {
+		if pl.UUID == r.Drawer {
+			pl.Status = "drawing"
+		} else {
+			pl.Status = "guessing"
+		}
+	}
 }

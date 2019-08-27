@@ -5,6 +5,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 )
@@ -19,11 +20,11 @@ type Guess struct {
 // Round - represents state of a single round
 type Round struct {
 	ID             int
-	targetLabel    string
-	guesses        []Guess
-	labelOptions   []string
-	currentDrawing string
-	drawer         *Client
+	TargetLabel    string
+	Guesses        []Guess
+	LabelOptions   []string
+	CurrentDrawing string
+	Drawer         string
 }
 
 // Game - represents state of a single drawing game
@@ -32,7 +33,7 @@ type Game struct {
 	Status        string
 	Players       []*Client
 	Creator       string
-	currentRound  Round
+	CurrentRound  Round
 	stateModifier chan Message
 	incoming      chan Message
 }
@@ -70,20 +71,27 @@ func (g *Game) play() {
 		const targetLabel = "dog"
 		labelOptions := []string{"cat", "dog", "mouse", "horse"}
 		r := Round{
-			ID:           i,
-			drawer:       pl,
-			labelOptions: labelOptions,
-			targetLabel:  targetLabel,
+			ID:           i + 1,
+			Drawer:       pl.UUID,
+			LabelOptions: labelOptions,
+			TargetLabel:  targetLabel,
 		}
+
+		msgPayload, err := json.Marshal(r)
+		if err != nil {
+			panic(err)
+		}
+
 		fmt.Printf("Round: %+v\n", r)
 		// TODO add message for new round
-		// stateModifier <- Message{
-		// 	origin:  g,
-		// 	cause:   "newRound",
-		// 	payload: "TODO",
-		// }
-		time.Sleep(60 * time.Second)
+		stateModifier <- Message{
+			origin:  g,
+			cause:   "newRound",
+			payload: string(msgPayload),
+		}
+		time.Sleep(30 * time.Second)
 	}
 
 	// TODO send endGame message
+	fmt.Println("Game ended!")
 }
