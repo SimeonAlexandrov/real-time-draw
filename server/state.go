@@ -101,14 +101,13 @@ func (s State) handleStateWriteOp(write Message, sModifier chan Message) {
 	case "startGame":
 		s.handleStartGame(write)
 	case "newRound":
-		// Change audience only to involved players
-		// UPDATE it was not needed here but this concept might be useful elsewhere
-		// if g, ok := write.origin.(*Game); ok {
-		// 	audience = g.Players
-		// }
 		s.handleNewRound(write)
 	case "updateDrawing":
-		// TODO This property should be part of Game at some point
+		// Change audience only to involved players
+		if g, ok := write.origin.(*Game); ok {
+			audience = g.Players
+		}
+		s.handleUpdateDrawing(write)
 	case "makeGuess":
 		// TODO update round with guess
 		// And notify for guesses the others
@@ -192,6 +191,14 @@ func (s State) handleNewRound(write Message) {
 		} else {
 			pl.Status = "guessing"
 		}
+	}
+}
+
+func (s State) handleUpdateDrawing(write Message) {
+	if cl, ok := write.origin.(*Client); ok {
+		gameID := cl.JoinedGame
+		game := s.Games[gameID]
+		game.CurrentRound.CurrentDrawing = write.payload
 	}
 }
 

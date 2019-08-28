@@ -9,6 +9,9 @@ import Page from "../_components/Page"
 import { UsersTable } from "./UsersTable"
 import { GamesTable } from "./GamesTable"
 
+import Receiver from "../Receiver/Receiver"
+import Sender from '../Sender/Sender'
+
 class Lobby extends Component {
     constructor(props) {
         super(props)
@@ -16,7 +19,9 @@ class Lobby extends Component {
             websocketClient: null,
             users: [],
             games: [], 
-            userInfo: null
+            userInfo: null,
+            shouldRenderReceiver: false,
+            shouldRenderSender: false,
         }
     }
 
@@ -36,7 +41,7 @@ class Lobby extends Component {
         console.log("Message received!")
         console.log("Current user: ", this.props.location.userProps.userId)
         const clients = newState.clients.map(cl => JSON.parse(cl))
-        console.log("Clients: ",clients)
+        // console.log("Clients: ",clients)
         const games = newState.games.map(g => JSON.parse(g))
         console.log("Games: ", games)
     }
@@ -49,14 +54,27 @@ class Lobby extends Component {
                 .filter(g => g.id === joinedGame)
             if (filteredGames.length === 0) {
                 console.log("No game joined")
+                this.setState({
+                    ...this.state,
+                    shouldRenderSender: false, 
+                    shouldRenderReceiver: false
+                })
             } else if(filteredGames.length > 1) {
                 console.log("Oops")
             } else {
                 if (filteredGames[0].status === "inProgress") {
                     if (userInfo.status === "drawing") {
-                        console.warn("Redirecting to DRAWING")
+                       this.setState({
+                           ...this.state, 
+                           shouldRenderSender: true,
+                        shouldRenderReceiver: false
+                    })
                     } else if (userInfo.status === "guessing") {
-                        console.warn("Redirecting to GUESSING")
+                        this.setState({
+                            ...this.state,
+                            shouldRenderSender: false, 
+                            shouldRenderReceiver: true
+                        })
                     }
                 }
             }
@@ -65,14 +83,14 @@ class Lobby extends Component {
     
     onReceiveMessage (message) {
         const newState = JSON.parse(message.data)
-        
+        const userProps = this.props.location.userProps
         this.debugMessage(newState)
         let thisUserInfo 
         this.setState({
             ...this.state,
             users: newState.clients.map(cl => {
                 const { UUID, Status, JoinedGame} = JSON.parse(cl) 
-                const userProps = this.props.location.userProps
+
                 const userInfo = {
                     key: UUID,
                     userId: UUID.split("-")[0],
@@ -85,15 +103,16 @@ class Lobby extends Component {
                 return userInfo
             }),
             games: newState.games.map(g => {
-                const {ID, Status, Players, Creator } = JSON.parse(g)
+                const {ID, Status, Players, Creator, CurrentRound } = JSON.parse(g)
                 return {
                     key: ID,
                     id: ID,
                     playersJoined: Players.length,
                     status: Status,
-                    canJoin: Status === "pending" && Creator.split("-")[0] !== this.props.location.userProps.userId
+                    currentRound: CurrentRound,
+                    canJoin: Status === "pending" && Creator.split("-")[0] !== userProps.userId
                 }
-            })
+            }) 
         }, () => {
             if (thisUserInfo && !this.state.userInfo) {
                 this.setState({
@@ -143,8 +162,18 @@ class Lobby extends Component {
         this.state.websocketClient.send(this.prepareMessage(joinGameMessage))
     }
 
-    render() {
+    onDrawEvent(drawing) {
         const userId = this.props.location.userProps ?  this.props.location.userProps.userId : null
+        const uuid = this.state.users.filter(user => user.userId === userId)[0].key
+        const drawMessage = {
+            id: uuid,
+            cause: MSG_TYPES.DRAW,
+            payload: drawing
+        }
+        this.state.websocketClient.send(this.prepareMessage(drawMessage))
+    }
+
+    renderLobby(userId) {
         return (
             <Page title="Lobby">
                <Row gutter={16}>
@@ -164,7 +193,36 @@ class Lobby extends Component {
                     </Col>
                 </Row>
             </Page>
-        );
+        )
+
+    }
+
+    render() {
+        console.log("State: ", this.state)
+        const userId = this.props.location.userProps ?  this.props.location.userProps.userId : null
+        if (this.state.user && this.state.userInfo.joinedGame === "") {
+            return this.renderLobby(userId)
+        } else if (this.state.shouldRenderReceiver && this.state.games.length > 0) {
+            return (
+                <Receiver 
+                    clientId={this.state.userInfo.userId}
+                    round={
+                        this.state.games
+                            .filter(g => g.ID === this.state.userInfo.joinedGame)[0]
+                            .currentRound
+                    }
+                />
+            )
+        } else if (this.state.shouldRenderSender && this.state.games.length > 0) {
+            return (
+                <Sender 
+                    onDrawEvent={this.onDrawEvent.bind(this)} 
+                    clientId={this.state.userInfo.userId}
+                />
+            )
+        } else {
+            return this.renderLobby(userId)
+        }
     }
 }
 const withRouterLobby = withRouter(Lobby)

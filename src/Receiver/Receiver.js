@@ -14,31 +14,17 @@ class Receiver extends Component {
       canvas: null
     }
   }
-  
-  prepareMessage = (objectMessage) => Buffer.from(JSON.stringify(objectMessage)) 
 
-  componentDidMount() {
-    const websocketClient = new W3CWebSocket(`ws://127.0.0.1:8000/ws?id=${this.props.clientId}`)
-    websocketClient.onopen = () => {
-      const initMessage = { 
-        id: this.props.clientId,
-        cause: MSG_TYPES.INIT 
-      }
-      websocketClient.send(this.prepareMessage(initMessage))
+  componentWillReceiveProps(props) {
+    console.warn("Receiver will receive props")
+    console.log(props)
+    if (this.props.round && this.props.round.CurrentDrawing !== "") {
+      
+      this.setState({
+        ...this.state,
+        saveData: this.props.round.CurrentDrawing
+      })
     }
-    websocketClient.onmessage = message => {
-      console.log("Received message from websocket connection", message.data)
-      if (message.data) {
-        this.setState({
-          ...this.state,
-          saveData: message.data
-        })
-      }
-    }
-    window.addEventListener("mouseup", event => {
-      const drawing = this.canvas.getSaveData()
-      websocketClient.send(Buffer(JSON.stringify(drawing)))
-    })
   }
 
   render() {
@@ -46,6 +32,7 @@ class Receiver extends Component {
       <React.Fragment>
         <h1>DrawProject: Receiver</h1>
         <h2>Hi, {this.props.clientId}. Try to guess the drawing</h2>
+        <p>{this.props.round ? JSON.stringify(this.props.round) : null }</p>
         <br/>
         <div style={{width:"100%"}}>
           <div style={{ display: "table",margin: "0 auto", border: "1px solid black"}}>

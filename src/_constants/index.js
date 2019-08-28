@@ -1,6 +1,6 @@
 const MSG_TYPES = {
     "INIT": "init",
-    "DRAW": "draw",
+    "DRAW": "updateDrawing",
     "CREATE_NEW_GAME": "createNewGame",
     "JOIN_GAME": "joinGame"
 }

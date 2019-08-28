@@ -1,9 +1,6 @@
 import React, { Component } from 'react';
 import CanvasDraw from "react-canvas-draw";
-import { w3cwebsocket as W3CWebSocket } from "websocket"
 import PropTypes from 'prop-types'
-
-import MSG_TYPES from "../_constants"
 
 class Sender extends Component {
   constructor(props) {
@@ -18,29 +15,11 @@ class Sender extends Component {
   prepareMessage = (objectMessage) => Buffer.from(JSON.stringify(objectMessage)) 
 
   componentDidMount() {
-    const websocketClient = new W3CWebSocket(`ws://127.0.0.1:8000/ws?id=${this.props.clientId}`)
-    websocketClient.onopen = () => {
-      console.log("Sender WebSocket client connected")
-      const initMessage = { 
-        id: this.props.clientId,
-        cause: MSG_TYPES.INIT 
-      }
-      websocketClient.send(this.prepareMessage(initMessage))
-    }
-
-    websocketClient.onmessage = (message) => {
-      console.log("Received message from server")
-      console.log(message)
-    }
-
     window.addEventListener("mouseup", event => {
-      const drawing = this.canvas.getSaveData()
-      const drawMessage = {
-        id: this.props.clientId,
-        cause: MSG_TYPES.DRAW,
-        payload: drawing
+      if(this.canvas) {
+        const drawing = this.canvas.getSaveData()
+        this.props.onDrawEvent(drawing)
       }
-      websocketClient.send(this.prepareMessage(drawMessage))
     })
   }
 
@@ -51,7 +30,7 @@ class Sender extends Component {
         <h2>Hi, {this.props.clientId}. Try to draw *placeholder*</h2>
         <br/>
         <div style={{width:"100%"}}>
-          <div style={{ display: "table",margin: "0 auto", border: "1px solid black"}}>
+          <div style={{ display: "table", margin: "0 auto", border: "1px solid black"}}>
             <CanvasDraw
               ref={canvas => this.canvas = canvas}
               saveData={this.state.saveData}
