@@ -1,6 +1,9 @@
 import React, { Component } from 'react';
 import CanvasDraw from "react-canvas-draw";
+import { Row, Col, Button } from "antd"
 import PropTypes from "prop-types"
+
+import Page from "../_components/Page"
 
 class Receiver extends Component {
   constructor(props) {
@@ -25,8 +28,7 @@ class Receiver extends Component {
 
   render() {
     return (
-      <React.Fragment>
-        <h1>DrawProject: Receiver</h1>
+      <Page title={`Hi, ${this.props.clientId}. Try to guess the drawing`}>
         <h2>Hi, {this.props.clientId}. Try to guess the drawing</h2>
         <br/>
         <div style={{width:"100%"}}>
@@ -35,10 +37,25 @@ class Receiver extends Component {
               ref={canvas => this.canvas = canvas}
               saveData={this.state.saveData}
             />
-
           </div>
+          <Row gutter={16} style={{marginBottom: "16px"}}>
+              <Col span={12}>
+                <Button>{this.props.round.LabelOptions[0]}</Button>
+              </Col>
+              <Col span={12}>
+                <Button>{this.props.round.LabelOptions[1]}</Button>
+              </Col>
+            </Row>
+            <Row gutter={16} style={{marginBottom: "16px"}}>
+              <Col span={12}>
+                <Button>{this.props.round.LabelOptions[2]}</Button>
+              </Col>
+              <Col span={12}>
+                <Button>{this.props.round.LabelOptions[3]}</Button>
+              </Col>
+            </Row>
         </div>
-      </React.Fragment>
+      </Page>
     );
   }
 }
