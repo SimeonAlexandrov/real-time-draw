@@ -1,9 +1,6 @@
 import React, { Component } from 'react';
 import CanvasDraw from "react-canvas-draw";
-import { w3cwebsocket as W3CWebSocket } from "websocket"
 import PropTypes from "prop-types"
-
-import MSG_TYPES from "../_constants"
 
 class Receiver extends Component {
   constructor(props) {
@@ -17,12 +14,11 @@ class Receiver extends Component {
 
   componentWillReceiveProps(props) {
     console.warn("Receiver will receive props")
-    console.log(props)
-    if (this.props.round && this.props.round.CurrentDrawing !== "") {
+    if (props.round && props.round.CurrentDrawing !== "") {
       
       this.setState({
         ...this.state,
-        saveData: this.props.round.CurrentDrawing
+        saveData: props.round.CurrentDrawing
       })
     }
   }
@@ -40,6 +36,7 @@ class Receiver extends Component {
               ref={canvas => this.canvas = canvas}
               saveData={this.state.saveData}
             />
+
           </div>
         </div>
       </React.Fragment>
