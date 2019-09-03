@@ -28,7 +28,6 @@ class Receiver extends Component {
       <React.Fragment>
         <h1>DrawProject: Receiver</h1>
         <h2>Hi, {this.props.clientId}. Try to guess the drawing</h2>
-        <p>{this.props.round ? JSON.stringify(this.props.round) : null }</p>
         <br/>
         <div style={{width:"100%"}}>
           <div style={{ display: "table",margin: "0 auto", border: "1px solid black"}}>
