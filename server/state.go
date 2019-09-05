@@ -108,9 +108,10 @@ func (s State) handleStateWriteOp(write Message, sModifier chan Message) {
 			audience = g.Players
 		}
 		s.handleUpdateDrawing(write)
-	case "makeGuess":
+	case "guess":
 		// TODO update round with guess
 		// And notify for guesses the others
+		fmt.Println("GUESS event")
 	case "endGame":
 		s.handleEndGame(write)
 	case "exit":

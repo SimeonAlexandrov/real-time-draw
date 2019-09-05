@@ -1,7 +1,9 @@
 import React, { Component } from 'react';
 import CanvasDraw from "react-canvas-draw";
 import PropTypes from 'prop-types'
+import { Row, Col } from "antd"
 
+import Page from "../_components/Page"
 class Sender extends Component {
   constructor(props) {
     super(props)
@@ -25,19 +27,23 @@ class Sender extends Component {
 
   render() {
     return (
-      <React.Fragment>
-        <h1>DrawProject: Sender</h1>
-        <h2>Hi, {this.props.clientId}. Try to draw *placeholder*</h2>
-        <br/>
+      <Page title={`Hi, ${this.props.clientId}. Try to draw ${this.props.round.TargetLabel}`}>
         <div style={{width:"100%"}}>
-          <div style={{ display: "table", margin: "0 auto", border: "1px solid black"}}>
-            <CanvasDraw
-              ref={canvas => this.canvas = canvas}
-              saveData={this.state.saveData}
-            />
-          </div>
+          <h2 style={{textAlign: "center"}}>Round: {this.props.round.ID}</h2>
+          <Row>
+            <Col span={8}/>
+            <Col span={8}>
+              <div style={{ display: "table", margin: "0 auto", border: "1px solid black"}}>
+                <CanvasDraw
+                  ref={canvas => this.canvas = canvas}
+                  saveData={this.state.saveData}
+                />
+              </div>
+            </Col>
+            <Col span={8}/>
+          </Row>
         </div>
-      </React.Fragment>
+      </Page>
     );
   }
 }

@@ -21,7 +21,7 @@ type Guess struct {
 type Round struct {
 	ID             int
 	TargetLabel    string
-	Guesses        []Guess
+	LatestGuess    Guess
 	LabelOptions   []string
 	CurrentDrawing string
 	Drawer         string
@@ -49,7 +49,7 @@ func (g Game) getID() string {
 // NOTE modifing game in this function
 // is not advised due to concurrency issues
 func (g *Game) Wait() {
-	const waitSeconds = 30
+	const waitSeconds = 10
 	const requiredPlayers = 2
 
 	// TODO Add a limit to waiting
@@ -101,7 +101,7 @@ func (g Game) playRound(n int, uuid string) {
 		cause:   "newRound",
 		payload: string(msgPayload),
 	}
-	time.Sleep(10 * time.Second)
+	time.Sleep(40 * time.Second)
 }
 
 func (g Game) end() {

@@ -173,6 +173,20 @@ class Lobby extends Component {
         this.state.websocketClient.send(this.prepareMessage(drawMessage))
     }
 
+    onGuessEvent(target) {
+        const userId = this.props.location.userProps ?  this.props.location.userProps.userId : null
+        const uuid = this.state.users.filter(user => user.userId === userId)[0].key
+        const guessMessage = {
+            id: uuid,
+            cause: MSG_TYPES.GUESS
+        }
+        this.state
+            .websocketClient
+            .send(
+                this.prepareMessage(guessMessage)
+            )
+    }
+
     renderLobby(userId) {
         return (
             <Page title="Lobby">
@@ -205,6 +219,7 @@ class Lobby extends Component {
         } else if (this.state.shouldRenderReceiver && this.state.games.length > 0) {
             return (
                 <Receiver 
+                    onGuessEvent={this.onGuessEvent.bind(this)}
                     clientId={this.state.userInfo.userId}
                     round={
                         this.state.games
@@ -218,6 +233,11 @@ class Lobby extends Component {
                 <Sender 
                     onDrawEvent={this.onDrawEvent.bind(this)} 
                     clientId={this.state.userInfo.userId}
+                    round={
+                        this.state.games
+                            .filter(g => g.ID === this.state.userInfo.joinedGame)[0]
+                            .currentRound
+                    }
                 />
             )
         } else {
