@@ -25,7 +25,6 @@ func (c Client) getID() string {
 
 func (c Client) handleIncoming() {
 	defer func() {
-		// TODO unregister from state
 		fmt.Println("User leaving:", c.UUID)
 		// Exit msg
 		exitMsg := Message{

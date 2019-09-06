@@ -29,7 +29,7 @@ func main() {
 	err := http.ListenAndServe(":8000", nil)
 
 	if err != nil {
-		fmt.Println("Fatal error with http server: ", err)
+		panic(fmt.Errorf("Fatal error with http server: %v", err))
 	}
 }
 
