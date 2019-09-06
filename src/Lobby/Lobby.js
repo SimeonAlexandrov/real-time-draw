@@ -189,7 +189,7 @@ class Lobby extends Component {
 
     renderLobby(userId) {
         return (
-            <Page title="Lobby">
+            <Page title={`Welcome to lobby, ${userId}`}>
                <Row gutter={16}>
                     <Col span={12}>
                         <GamesTable

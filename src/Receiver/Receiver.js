@@ -27,6 +27,10 @@ class Receiver extends Component {
     const round = props.round
     const currentDrawing = round.CurrentDrawing
     const latestGuess = round.LatestGuess
+
+    console.log("Round: ")
+    console.log(round)
+
     if (round && currentDrawing !== "") {
       
       this.setState({
@@ -48,7 +52,7 @@ class Receiver extends Component {
   }
 
   render() {
-    return (
+    return this.props.round.LabelOptions ? (
       <Page title={`Hi, ${this.props.clientId}. Try to guess the drawing`}>
         <h2 style={{textAlign: "center"}}>Round: {this.props.round.ID}</h2>
         <div style={{width:"100%"}}>
@@ -104,7 +108,7 @@ class Receiver extends Component {
             
         </div>
       </Page>
-    );
+    ) : null
   }
 }
 

@@ -105,14 +105,14 @@ func (s State) handleStateWriteOp(write Message, sModifier chan Message) {
 		s.handleNewRound(write)
 	case "updateDrawing":
 		// Change audience only to involved players
-		if g, ok := write.origin.(*Game); ok {
-			audience = g.Players
+		if cl, ok := write.origin.(*Client); ok {
+			audience = s.Games[cl.JoinedGame].Players
 		}
 		s.handleUpdateDrawing(write)
 	case "guess":
 		// Change audience only to involved players
-		if g, ok := write.origin.(*Game); ok {
-			audience = g.Players
+		if cl, ok := write.origin.(*Client); ok {
+			audience = s.Games[cl.JoinedGame].Players
 		}
 		s.handleGuess(write)
 		latestGuestCheck = true
