@@ -1,3 +1,5 @@
 node_modules/
 .vscode/launch.json
 server/__debug_bin
+server/bin/
+build/

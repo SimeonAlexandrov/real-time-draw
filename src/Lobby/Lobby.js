@@ -127,7 +127,7 @@ class Lobby extends Component {
     }
 
     onWebsocketOpen (userProps) {
-        const websocketClient = new W3CWebSocket(`ws://127.0.0.1:8000/ws?id=${userProps.userId}`)
+        const websocketClient = new W3CWebSocket(`ws://${process.env.REACT_APP_API_BASE}:8000/ws?id=${userProps.userId}`)
         websocketClient.onopen = () => {
             console.log("Landing WebSocket client connected")
             const initMessage = { 
