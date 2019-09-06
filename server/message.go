@@ -2,7 +2,6 @@ package main
 
 // Message causes:
 // - init
-// - draw
 // - exit
 // - broadcast
 // - createNew
@@ -11,7 +10,6 @@ package main
 // - nextRound
 // - updateDrawing
 // - guess
-// - addLabels
 
 // Origin - inteface of message sending entity
 type Origin interface {
