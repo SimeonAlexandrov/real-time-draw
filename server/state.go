@@ -8,15 +8,16 @@ import (
 // State is managed only by a state manager
 // We export State properties in order to JSON serialize them
 type State struct {
-	Drawing string
 	Clients map[string]*Client
 	Games   map[string]*Game
+	labels  []string
 }
 
 func manageState(writes chan Message) {
 	s := State{
 		Clients: make(map[string]*Client),
 		Games:   make(map[string]*Game),
+		labels:  GetLabels(),
 	}
 	fmt.Println("State manager routine has started.")
 	for {
@@ -176,7 +177,7 @@ func (s State) handleJoinGame(write Message) {
 func (s State) handleStartGame(write Message) {
 	game := s.Games[write.origin.getID()]
 	game.Status = "inProgress"
-	go game.Play()
+	go game.Play(s.labels)
 }
 
 func (s State) handleNewRound(write Message) {

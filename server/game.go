@@ -7,6 +7,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"time"
 )
 
@@ -71,17 +72,25 @@ func (g *Game) Wait() {
 // Play - the main function of a short-lived
 // goroutine that is responsible for changing rounds
 // and ending a game
-func (g *Game) Play() {
+func (g *Game) Play(labels []string) {
 	for i, pl := range g.Players {
-		g.playRound(i, pl.UUID)
+		g.playRound(i, pl.UUID, labels)
 	}
 	g.end()
 }
 
-func (g Game) playRound(n int, uuid string) {
-	// TODO do not use hardcoded values
-	const targetLabel = "dog"
-	labelOptions := []string{"cat", "dog", "mouse", "horse"}
+func (g Game) playRound(n int, uuid string, labels []string) {
+	var targetLabel = GetRandomLabel(labels)
+	labelOptions := []string{
+		targetLabel,
+		GetRandomLabel(labels),
+		GetRandomLabel(labels),
+		GetRandomLabel(labels),
+	}
+
+	rand.Seed(time.Now().UnixNano())
+	rand.Shuffle(len(labelOptions), func(i, j int) { labelOptions[i], labelOptions[j] = labelOptions[j], labelOptions[i] })
+
 	r := Round{
 		ID:           n + 1,
 		Drawer:       uuid,

@@ -9,6 +9,9 @@ package main
 // - joinGame
 // - startGame
 // - nextRound
+// - updateDrawing
+// - guess
+// - addLabels
 
 // Origin - inteface of message sending entity
 type Origin interface {
