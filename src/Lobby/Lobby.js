@@ -47,7 +47,6 @@ class Lobby extends Component {
     }
 
     checkIfGameHasStartedForCurrentUser = (userInfo) => {
-        console.warn("Checking...")
         if (userInfo ) {
             const joinedGame = userInfo.game
             const filteredGames = this.state.games
@@ -173,12 +172,13 @@ class Lobby extends Component {
         this.state.websocketClient.send(this.prepareMessage(drawMessage))
     }
 
-    onGuessEvent(target) {
+    onGuessEvent(guess) {
         const userId = this.props.location.userProps ?  this.props.location.userProps.userId : null
         const uuid = this.state.users.filter(user => user.userId === userId)[0].key
         const guessMessage = {
             id: uuid,
-            cause: MSG_TYPES.GUESS
+            cause: MSG_TYPES.GUESS,
+            payload: guess
         }
         this.state
             .websocketClient
@@ -212,7 +212,6 @@ class Lobby extends Component {
     }
 
     render() {
-        console.log("State: ", this.state)
         const userId = this.props.location.userProps ?  this.props.location.userProps.userId : null
         if (this.state.user && this.state.userInfo.joinedGame === "") {
             return this.renderLobby(userId)

@@ -24,16 +24,25 @@ class Receiver extends Component {
   }
 
   componentWillReceiveProps(props) {
-    console.warn("Receiver will receive props")
-    if (props.round && props.round.CurrentDrawing !== "") {
+    const round = props.round
+    const currentDrawing = round.CurrentDrawing
+    const latestGuess = round.LatestGuess
+    if (round && currentDrawing !== "") {
       
       this.setState({
         ...this.state,
         saveData: props.round.CurrentDrawing,
       })
-
-      if (props.round.LatestGuess) {
-        console.warn("NEW GUESS!")
+    }
+    console.log("Receiver: component will receive props")
+    if (round && 
+      latestGuess.Origin) {
+      if (!this.props.round.LatestGuess.Origin || 
+        this.props.round.LatestGuess.Guess !== latestGuess.Guess) {
+          notification["success"]({
+            message: `Correct guess from ${latestGuess.Origin.UUID.split("-")[0]}`,
+            description:  `${latestGuess.Origin.UUID.split("-")[0]} thinks that ${round.Drawer.split("-")[0]} is drawing ${latestGuess.Guess}`
+          })
       }
     }
   }

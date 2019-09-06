@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import CanvasDraw from "react-canvas-draw";
 import PropTypes from 'prop-types'
-import { Row, Col } from "antd"
+import { Row, Col, notification } from "antd"
 
 import Page from "../_components/Page"
 class Sender extends Component {
@@ -23,6 +23,21 @@ class Sender extends Component {
         this.props.onDrawEvent(drawing)
       }
     })
+  }
+
+  componentWillReceiveProps(props) {
+    const round = props.round
+    const latestGuess = round.LatestGuess
+    console.log("Sender: component will receive props")
+    if (round && 
+      latestGuess.Origin) {
+      if (!this.props.round.LatestGuess.Origin || 
+        this.props.round.LatestGuess.Guess !== latestGuess.Guess)
+      notification["success"]({
+        message: `Correct guess from ${latestGuess.Origin.UUID.split("-")[0]}`,
+        description:  `${latestGuess.Origin.UUID.split("-")[0]} thinks that ${round.Drawer.split("-")[0]} is drawing ${latestGuess.Guess}`
+      })
+    }
   }
 
   render() {
