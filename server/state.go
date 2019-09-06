@@ -23,37 +23,47 @@ func manageState(writes chan Message) {
 	for {
 		select {
 		case write := <-writes:
-			s.handleStateWriteOp(write, writes)
+			err := s.handleStateWriteOp(write, writes)
+			if err != nil {
+				fmt.Println("Failed to handle state write operation")
+			}
 		}
 
 	}
 }
 
-// TODO broadcast to a target group
-func (s State) broadcast(o Origin, audience []*Client) {
+func (s State) broadcast(o Origin, audience []*Client) error {
 	if audience != nil {
 		fmt.Println("Broadcasting new state to specified audience")
 		for _, c := range audience {
-			s.sendMessage(c, o)
+			err := s.sendMessage(c, o)
+			if err != nil {
+				return fmt.Errorf("Failed to broadcast to audience")
+			}
 		}
 	} else {
 		fmt.Println("Broadcasting new state to all clients")
 		for _, c := range s.Clients {
-			s.sendMessage(c, o)
+			err := s.sendMessage(c, o)
+			if err != nil {
+				return fmt.Errorf("Failed to broadcast to all clients")
+			}
 		}
 	}
+	return fmt.Errorf("Failed to broadcast message")
 }
 
-func (s State) sendMessage(c *Client, o Origin) {
+func (s State) sendMessage(c *Client, o Origin) error {
 	p, err := s.prepPayload()
 	if err != nil {
-		return
+		return fmt.Errorf("Failed to send message")
 	}
 	c.outgoing <- Message{
 		origin:  o,
 		cause:   "broadcast",
 		payload: p,
 	}
+	return nil
 }
 
 func (s State) prepPayload() (string, error) {
@@ -84,7 +94,7 @@ func (s State) prepPayload() (string, error) {
 	return string(p), nil
 }
 
-func (s State) handleStateWriteOp(write Message, sModifier chan Message) {
+func (s State) handleStateWriteOp(write Message, sModifier chan Message) error {
 	fmt.Printf("Write operation of state: %+v\n", write)
 	var audience []*Client
 	var latestGuestCheck = false
@@ -123,15 +133,19 @@ func (s State) handleStateWriteOp(write Message, sModifier chan Message) {
 		delete(s.Clients, write.origin.getID())
 	default:
 		fmt.Println("State error: unrecognized write cause: ", write.cause)
-		return
+		return fmt.Errorf("Unable to recognize message cause")
 	}
 	// Every state change is broadcasted
-	s.broadcast(write.origin, audience)
+	err := s.broadcast(write.origin, audience)
+	if err != nil {
+		return fmt.Errorf("Failed to broadcast")
+	}
 
 	// However after broadcast latest guess
 	if latestGuestCheck {
 		s.latestGuessCheck(write)
 	}
+	return nil
 }
 
 func (s State) handleCreateNewGame(write Message, sModifier chan Message) {
