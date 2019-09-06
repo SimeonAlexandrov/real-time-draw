@@ -86,6 +86,7 @@ func (s State) prepPayload() (string, error) {
 func (s State) handleStateWriteOp(write Message, sModifier chan Message) {
 	fmt.Printf("Write operation of state: %+v\n", write)
 	var audience []*Client
+	var latestGuestCheck = false
 	switch write.cause {
 	case "init":
 		// Type assertion
@@ -109,9 +110,12 @@ func (s State) handleStateWriteOp(write Message, sModifier chan Message) {
 		}
 		s.handleUpdateDrawing(write)
 	case "guess":
-		// TODO update round with guess
-		// And notify for guesses the others
-		fmt.Println("GUESS event")
+		// Change audience only to involved players
+		if g, ok := write.origin.(*Game); ok {
+			audience = g.Players
+		}
+		s.handleGuess(write)
+		latestGuestCheck = true
 	case "endGame":
 		s.handleEndGame(write)
 	case "exit":
@@ -120,13 +124,13 @@ func (s State) handleStateWriteOp(write Message, sModifier chan Message) {
 		fmt.Println("State error: unrecognized write cause: ", write.cause)
 		return
 	}
-
-	fmt.Printf("Updated state: %+v\n", s)
-
 	// Every state change is broadcasted
-
 	s.broadcast(write.origin, audience)
 
+	// However after broadcast latest guess
+	if latestGuestCheck {
+		s.latestGuessCheck(write)
+	}
 }
 
 func (s State) handleCreateNewGame(write Message, sModifier chan Message) {
@@ -211,4 +215,25 @@ func (s State) handleEndGame(write Message) {
 		pl.JoinedGame = ""
 	}
 	delete(s.Games, gameID)
+}
+
+func (s State) handleGuess(write Message) {
+	if cl, ok := write.origin.(*Client); ok {
+		gameID := cl.JoinedGame
+		game := s.Games[gameID]
+		lg := Guess{
+			Origin:    cl,
+			Guess:     write.payload,
+			IsCorrect: write.payload == game.CurrentRound.TargetLabel,
+		}
+		game.CurrentRound.LatestGuess = lg
+	}
+}
+
+func (s State) latestGuessCheck(write Message) {
+	if cl, ok := write.origin.(*Client); ok {
+		gameID := cl.JoinedGame
+		game := s.Games[gameID]
+		game.CurrentRound.LatestGuess = Guess{}
+	}
 }

@@ -12,9 +12,9 @@ import (
 
 // Guess - represents single guess
 type Guess struct {
-	origin    *Client
-	guess     string
-	isCorrect bool
+	Origin    *Client
+	Guess     string
+	IsCorrect bool
 }
 
 // Round - represents state of a single round
