@@ -43,11 +43,15 @@ class Receiver extends Component {
       latestGuess.Origin) {
       if (!this.props.round.LatestGuess.Origin || 
         this.props.round.LatestGuess.Guess !== latestGuess.Guess) {
-          notification["success"]({
-            message: `Correct guess from ${latestGuess.Origin.UUID.split("-")[0]}`,
+          const notificationType = latestGuess.IsCorrect ? "success" : "warning"
+          const notificationMessage = latestGuess.IsCorrect ? 
+            `Correct guess from ${latestGuess.Origin.UUID.split("-")[0]}` :
+            `Incorrect guess from ${latestGuess.Origin.UUID.split("-")[0]}`
+          notification[notificationType]({
+            message: notificationMessage,
             description:  `${latestGuess.Origin.UUID.split("-")[0]} thinks that ${round.Drawer.split("-")[0]} is drawing ${latestGuess.Guess}`
           })
-      }
+        }
     }
   }
 
