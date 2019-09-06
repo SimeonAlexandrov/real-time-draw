@@ -104,31 +104,54 @@ func (s State) handleStateWriteOp(write Message, sModifier chan Message) error {
 		if cl, ok := write.origin.(*Client); ok {
 			s.Clients[write.origin.getID()] = cl
 		} else {
-			fmt.Printf("Init message is not sent by user!\n")
+			return fmt.Errorf("Init message is not sent by user")
 		}
 	case "createNewGame":
-		s.handleCreateNewGame(write, sModifier)
+		err := s.handleCreateNewGame(write, sModifier)
+		if err != nil {
+			return fmt.Errorf("Failed to create new game")
+		}
 	case "joinGame":
-		s.handleJoinGame(write)
+		err := s.handleJoinGame(write)
+		if err != nil {
+			return fmt.Errorf("Failed to join game")
+		}
 	case "startGame":
-		s.handleStartGame(write)
+		err := s.handleStartGame(write)
+		if err != nil {
+			return fmt.Errorf("Failed to start game")
+		}
 	case "newRound":
-		s.handleNewRound(write)
+		err := s.handleNewRound(write)
+		if err != nil {
+			return fmt.Errorf("Failed to create new round")
+		}
 	case "updateDrawing":
 		// Change audience only to involved players
 		if cl, ok := write.origin.(*Client); ok {
 			audience = s.Games[cl.JoinedGame].Players
 		}
-		s.handleUpdateDrawing(write)
+		err := s.handleUpdateDrawing(write)
+		if err != nil {
+			return fmt.Errorf("Failed to update drawing")
+		}
 	case "guess":
 		// Change audience only to involved players
 		if cl, ok := write.origin.(*Client); ok {
 			audience = s.Games[cl.JoinedGame].Players
 		}
-		s.handleGuess(write)
+		err := s.handleGuess(write)
+		if err != nil {
+			return fmt.Errorf("Failed to guess")
+		}
+
 		latestGuestCheck = true
+
 	case "endGame":
-		s.handleEndGame(write)
+		err := s.handleEndGame(write)
+		if err != nil {
+			return fmt.Errorf("Failed to end game")
+		}
 	case "exit":
 		delete(s.Clients, write.origin.getID())
 	default:
@@ -148,7 +171,7 @@ func (s State) handleStateWriteOp(write Message, sModifier chan Message) error {
 	return nil
 }
 
-func (s State) handleCreateNewGame(write Message, sModifier chan Message) {
+func (s State) handleCreateNewGame(write Message, sModifier chan Message) error {
 	fmt.Println("Create new game event received")
 	if cl, ok := write.origin.(*Client); ok {
 		players := make([]*Client, 1)
@@ -169,11 +192,13 @@ func (s State) handleCreateNewGame(write Message, sModifier chan Message) {
 
 		go game.Wait()
 	} else {
-		fmt.Printf("createNewGame message is not sent by user!\n")
+		return fmt.Errorf("createNewGame message is not sent by user")
 	}
+
+	return nil
 }
 
-func (s State) handleJoinGame(write Message) {
+func (s State) handleJoinGame(write Message) error {
 	if cl, ok := write.origin.(*Client); ok {
 		originID := cl.getID()
 		gameID := write.payload
@@ -184,22 +209,25 @@ func (s State) handleJoinGame(write Message) {
 		updatedPlayers := append(s.Games[gameID].Players, cl)
 		s.Games[gameID].Players = updatedPlayers
 	} else {
-		fmt.Printf("createNewGame message is not sent by user!\n")
+		return fmt.Errorf("createNewGame message is not sent by user")
 	}
+
+	return nil
 }
 
-func (s State) handleStartGame(write Message) {
+func (s State) handleStartGame(write Message) error {
 	game := s.Games[write.origin.getID()]
 	game.Status = "inProgress"
 	go game.Play(s.labels)
+	return nil
 }
 
-func (s State) handleNewRound(write Message) {
+func (s State) handleNewRound(write Message) error {
 	// TODO update game property with round
 	r := Round{}
 	err := json.Unmarshal([]byte(write.payload), &r)
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("Failed to unmarshal new round data")
 	}
 
 	game := s.Games[write.origin.getID()]
@@ -212,17 +240,21 @@ func (s State) handleNewRound(write Message) {
 			pl.Status = "guessing"
 		}
 	}
+
+	return nil
 }
 
-func (s State) handleUpdateDrawing(write Message) {
+func (s State) handleUpdateDrawing(write Message) error {
 	if cl, ok := write.origin.(*Client); ok {
 		gameID := cl.JoinedGame
 		game := s.Games[gameID]
 		game.CurrentRound.CurrentDrawing = write.payload
+		return nil
 	}
+	return fmt.Errorf("Origin is not client")
 }
 
-func (s State) handleEndGame(write Message) {
+func (s State) handleEndGame(write Message) error {
 	gameID := write.origin.getID()
 	game := s.Games[gameID]
 	for _, pl := range game.Players {
@@ -230,9 +262,10 @@ func (s State) handleEndGame(write Message) {
 		pl.JoinedGame = ""
 	}
 	delete(s.Games, gameID)
+	return nil
 }
 
-func (s State) handleGuess(write Message) {
+func (s State) handleGuess(write Message) error {
 	if cl, ok := write.origin.(*Client); ok {
 		gameID := cl.JoinedGame
 		game := s.Games[gameID]
@@ -242,13 +275,17 @@ func (s State) handleGuess(write Message) {
 			IsCorrect: write.payload == game.CurrentRound.TargetLabel,
 		}
 		game.CurrentRound.LatestGuess = lg
+		return nil
 	}
+	return fmt.Errorf("Origin is not client")
 }
 
-func (s State) latestGuessCheck(write Message) {
+func (s State) latestGuessCheck(write Message) error {
 	if cl, ok := write.origin.(*Client); ok {
 		gameID := cl.JoinedGame
 		game := s.Games[gameID]
 		game.CurrentRound.LatestGuess = Guess{}
+		return nil
 	}
+	return fmt.Errorf("Origin is not client")
 }
