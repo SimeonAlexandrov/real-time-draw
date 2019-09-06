@@ -5,7 +5,7 @@
 ## [Demo](http://golang-ui.s3-website-us-east-1.amazonaws.com/) on AWS 
 
 ## Installation
-# Server
+### Server
 ```bash
 cd ./server
 go get github.com/gorilla/websocket
@@ -13,7 +13,7 @@ go get github.com/google/uuid
 go run ./*.go
 ```
 Go server should be up at `http://localhost:3000`
-# Client
+### Client
 *Node* and *NPM* are prerequisites for the client
 Run theses commands into a shell:
 ```bash
@@ -38,6 +38,18 @@ type Message struct {
 ### Concurrency overview
 ![alt text](https://drive.google.com/uc?export=view&id=10kiw9U7B_wAhtg8TnWwKbeMqm3BVz8QE)
 
+## Deployment
+### Server
+Build the go code and upload the binary to the EC2 instance
+```bash
+cd ./server
+./build.sh
+```
+### Client
+Build the react app and upload to S3 bucket
+```
+npm run build
+```
 ## Acknowledgment
 *real-time-draw* uses a dataset for labels of drawings from [Quickdraw project](https://github.com/googlecreativelab/quickdraw-dataset)
 
